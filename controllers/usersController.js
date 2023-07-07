@@ -11,7 +11,7 @@ const getAllUsers = async (req, res) => {
 
     // If no users 
     if (!users?.length) {
-        return res.status(400).json({ message: 'No users found' })
+        return res.status(400).json({ message: 'Nenhum usuário encontrado.' })
     }
 
     res.json(users)
@@ -25,30 +25,30 @@ const createNewUser = async (req, res) => {
 
     // Confirm data
     if (!username || !password) {
-        return res.status(400).json({ message: 'All fields are required' })
+        return res.status(400).json({ message: 'Todos os campos são requeridos.' })
     }
 
-    // Check for duplicate username
+    // Check for este nome de usuário já está sendo utilizado.
     const duplicate = await User.findOne({ username }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
     if (duplicate) {
-        return res.status(409).json({ message: 'Duplicate username' })
+        return res.status(409).json({ message: 'Este nome de usuário já está sendo utilizado.' })
     }
 
     // Hash password 
     const hashedPwd = await bcrypt.hash(password, 10) // salt rounds
 
     const userObject = (!Array.isArray(roles) || !roles.length)
-        ? { username, "password": hashedPwd }
-        : { username, "password": hashedPwd, roles }
+        ? { username, "senha": hashedPwd }
+        : { username, "senha": hashedPwd, roles }
 
     // Create and store new user 
     const user = await User.create(userObject)
 
     if (user) { //created 
-        res.status(201).json({ message: `New user ${username} created` })
+        res.status(201).json({ message: `Novo usuário ${username} criado` })
     } else {
-        res.status(400).json({ message: 'Invalid user data received' })
+        res.status(400).json({ message: 'Dados do usuário inválidos.' })
     }
 }
 
@@ -60,22 +60,22 @@ const updateUser = async (req, res) => {
 
     // Confirm data 
     if (!id || !username || !Array.isArray(roles) || !roles.length || typeof active !== 'boolean') {
-        return res.status(400).json({ message: 'All fields except password are required' })
+        return res.status(400).json({ message: 'Todos os campos são requeridos, exceto pela senha.' })
     }
 
     // Does the user exist to update?
     const user = await User.findById(id).exec()
 
     if (!user) {
-        return res.status(400).json({ message: 'User not found' })
+        return res.status(400).json({ message: 'Usuário não encontrado' })
     }
 
     // Check for duplicate 
-    const duplicate = await User.findOne({ username }).collation({ locale: 'en', strength: 2 }).lean().exec()
+    const duplicate = await User.findOne({ username }).collation({ locale: 'pt', strength: 2 }).lean().exec()
 
     // Allow updates to the original user 
     if (duplicate && duplicate?._id.toString() !== id) {
-        return res.status(409).json({ message: 'Duplicate username' })
+        return res.status(409).json({ message: 'Este nome de usuário já está sendo utilizado.' })
     }
 
     user.username = username
@@ -89,7 +89,7 @@ const updateUser = async (req, res) => {
 
     const updatedUser = await user.save()
 
-    res.json({ message: `${updatedUser.username} updated` })
+    res.json({ message: `${updatedUser.username} atualizado.` })
 }
 
 // @desc Delete a user
@@ -100,25 +100,25 @@ const deleteUser = async (req, res) => {
 
     // Confirm data
     if (!id) {
-        return res.status(400).json({ message: 'User ID Required' })
+        return res.status(400).json({ message: 'ID do usuário requerido,' })
     }
 
     // Does the user still have assigned notes?
     const note = await Note.findOne({ user: id }).lean().exec()
     if (note) {
-        return res.status(400).json({ message: 'User has assigned notes' })
+        return res.status(400).json({ message: 'Usuário possui artigos subscritos.' })
     }
 
     // Does the user exist to delete?
     const user = await User.findById(id).exec()
 
     if (!user) {
-        return res.status(400).json({ message: 'User not found' })
+        return res.status(400).json({ message: 'Usuário não encontrado' })
     }
 
     const result = await user.deleteOne()
 
-    const reply = `Username ${result.username} with ID ${result._id} deleted`
+    const reply = `Usuário ${result.username} com ID ${result._id} deletado`
 
     res.json(reply)
 }

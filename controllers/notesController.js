@@ -10,7 +10,7 @@ const getAllNotes = async (req, res) => {
 
     // If no notes 
     if (!notes?.length) {
-        return res.status(400).json({ message: 'No notes found' })
+        return res.status(400).json({ message: 'Nenhum artigo encontrado.' })
     }
 
     // Add username to each note before sending the response 
@@ -32,23 +32,23 @@ const createNewNote = async (req, res) => {
 
     // Confirm data
     if (!user || !title || !text) {
-        return res.status(400).json({ message: 'All fields are required' })
+        return res.status(400).json({ message: 'Todos os campos são requeridos.' })
     }
 
     // Check for duplicate title
     const duplicate = await Note.findOne({ title }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
     if (duplicate) {
-        return res.status(409).json({ message: 'Duplicate note title' })
+        return res.status(409).json({ message: 'Um artigo com este título já foi criado.' })
     }
 
     // Create and store the new user 
     const note = await Note.create({ user, title, text })
 
     if (note) { // Created 
-        return res.status(201).json({ message: 'New note created' })
+        return res.status(201).json({ message: 'Novo artigo criado.' })
     } else {
-        return res.status(400).json({ message: 'Invalid note data received' })
+        return res.status(400).json({ message: 'Dados inválidos.' })
     }
 
 }
@@ -61,14 +61,14 @@ const updateNote = async (req, res) => {
 
     // Confirm data
     if (!id || !user || !title || !text || typeof completed !== 'boolean') {
-        return res.status(400).json({ message: 'All fields are required' })
+        return res.status(400).json({ message: 'Todos os campos são requeridos.' })
     }
 
     // Confirm note exists to update
     const note = await Note.findById(id).exec()
 
     if (!note) {
-        return res.status(400).json({ message: 'Note not found' })
+        return res.status(400).json({ message: 'Artigo não encontrado.' })
     }
 
     // Check for duplicate title
@@ -76,7 +76,7 @@ const updateNote = async (req, res) => {
 
     // Allow renaming of the original note 
     if (duplicate && duplicate?._id.toString() !== id) {
-        return res.status(409).json({ message: 'Duplicate note title' })
+        return res.status(409).json({ message: 'Um artigo com este título já foi criado.' })
     }
 
     note.user = user
@@ -86,7 +86,7 @@ const updateNote = async (req, res) => {
 
     const updatedNote = await note.save()
 
-    res.json(`'${updatedNote.title}' updated`)
+    res.json(`'${updatedNote.title}' atualizado`)
 }
 
 // @desc Delete a note
@@ -97,19 +97,19 @@ const deleteNote = async (req, res) => {
 
     // Confirm data
     if (!id) {
-        return res.status(400).json({ message: 'Note ID required' })
+        return res.status(400).json({ message: 'ID do artigo requerido.' })
     }
 
     // Confirm note exists to delete 
     const note = await Note.findById(id).exec()
 
     if (!note) {
-        return res.status(400).json({ message: 'Note not found' })
+        return res.status(400).json({ message: 'Artigo não encontrado' })
     }
 
     const result = await note.deleteOne()
 
-    const reply = `Note '${result.title}' with ID ${result._id} deleted`
+    const reply = `Artigo '${result.title}' com ID ${result._id} deletado`
 
     res.json(reply)
 }
